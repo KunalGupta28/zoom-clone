@@ -42,11 +42,11 @@ class MeetingService:
             raise HTTPException(status_code=404, detail="Meeting not found")
         return meeting
 
-    def get_upcoming_meetings(self):
-        return self.meeting_repo.get_upcoming()
+    def get_upcoming_meetings(self, user_id: int):
+        return self.meeting_repo.get_upcoming(user_id)
 
-    def get_recent_meetings(self):
-        return self.meeting_repo.get_recent()
+    def get_recent_meetings(self, user_id: int):
+        return self.meeting_repo.get_recent(user_id)
 
     def join_meeting(self, meeting_code: str, participant_data: ParticipantCreate, user_id: int = None) -> Participant:
         meeting = self.get_meeting(meeting_code)
@@ -67,3 +67,21 @@ class MeetingService:
             role=role
         )
         return self.participant_repo.create(participant)
+
+    def delete_meeting(self, meeting_code: str):
+        meeting = self.get_meeting(meeting_code)
+        
+        # Manually delete all participants first to avoid foreign key constraint errors
+        participants = self.db.query(Participant).filter(Participant.meeting_id == meeting.id).all()
+        for p in participants:
+            self.db.delete(p)
+            
+        self.meeting_repo.delete(meeting)
+
+    def update_meeting(self, meeting_code: str, title: str = None, description: str = None) -> Meeting:
+        meeting = self.get_meeting(meeting_code)
+        if title is not None:
+            meeting.title = title
+        if description is not None:
+            meeting.description = description
+        return self.meeting_repo.update(meeting)

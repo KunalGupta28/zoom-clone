@@ -4,7 +4,7 @@ from .database import Base, engine
 from .models.user import User
 from .models.meeting import Meeting
 from .models.participant import Participant
-from .routers import meetings, health
+from .routers import meetings, health, auth
 from .config import settings
 
 # Create database tables
@@ -21,5 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(meetings.router)

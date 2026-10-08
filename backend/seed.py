@@ -1,72 +1,63 @@
-import os
-from datetime import datetime, timedelta, timezone
-from app.database import SessionLocal, Base, engine
-from app.models.user import User
-from app.models.meeting import Meeting
-import random
-import string
+import sqlite3
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
 
-def generate_meeting_code() -> str:
-    return "".join(random.choices(string.digits, k=11))
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def seed_data():
-    db = SessionLocal()
+def seed_database():
+    conn = sqlite3.connect('zoom_clone.db')
+    cursor = conn.cursor()
+
+    print("Starting database seed...")
+
+    # 1. Seed Users
+    hashed_pw = pwd_context.hash('password123')
     
-    # Create tables if not exists
-    Base.metadata.create_all(bind=engine)
-    
-    # Idempotent check: if user exists, don't re-seed
-    user = db.query(User).filter(User.email == "kunal@example.com").first()
-    if user:
-        print("Data already seeded. Skipping.")
-        db.close()
-        return
+    # Check if default user exists, if not insert
+    cursor.execute("SELECT id FROM users WHERE email='default@example.com'")
+    if not cursor.fetchone():
+        cursor.execute('''
+            INSERT INTO users (id, name, email, hashed_password, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (1, 'Guest Default', 'default@example.com', hashed_pw, datetime.utcnow()))
+        print("Inserted default user.")
 
-    print("Seeding initial data...")
-    now_utc = datetime.now(timezone.utc)
-    
-    # Create default host user
-    default_user = User(
-        name="Kunal",
-        email="kunal@example.com",
-        created_at=now_utc
-    )
-    db.add(default_user)
-    db.commit()
-    db.refresh(default_user)
+    # Insert a test authenticated user
+    cursor.execute("SELECT id FROM users WHERE email='kunalgupta28k@gmail.com'")
+    if not cursor.fetchone():
+        cursor.execute('''
+            INSERT INTO users (id, name, email, hashed_password, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (2, 'Kunal Gupta', 'kunalgupta28k@gmail.com', hashed_pw, datetime.utcnow()))
+        print("Inserted Kunal test user.")
 
-    # Create Upcoming Meetings
-    for i in range(1, 4):
-        meeting = Meeting(
-            meeting_code=generate_meeting_code(),
-            title=f"Upcoming Sync {i}",
-            description="Discussion on project milestones.",
-            host_user_id=default_user.id,
-            scheduled_at=now_utc + timedelta(days=i, hours=2),
-            duration_minutes=45,
-            status="scheduled",
-            created_at=now_utc
-        )
-        db.add(meeting)
-
-    # Create Recent Meetings
-    for i in range(1, 4):
-        meeting = Meeting(
-            meeting_code=generate_meeting_code(),
-            title=f"Past Review {i}",
-            host_user_id=default_user.id,
-            scheduled_at=now_utc - timedelta(days=i, hours=2),
-            duration_minutes=60,
-            status="ended",
-            created_at=now_utc - timedelta(days=i, hours=2),
-            started_at=now_utc - timedelta(days=i, hours=2),
-            ended_at=now_utc - timedelta(days=i, hours=1)
-        )
-        db.add(meeting)
+    # 2. Seed Meetings
+    now = datetime.utcnow()
     
-    db.commit()
-    print("Seed complete!")
-    db.close()
+    meetings_data = [
+        # Upcoming meetings
+        ('Standup Meeting', 'Daily sync with the engineering team', now + timedelta(days=1, hours=2), 30, 'room-standup-123', 1),
+        ('Project Alpha Kickoff', 'Initial planning for Q3 goals', now + timedelta(days=2, hours=5), 60, 'room-alpha-456', 2),
+        ('Client Review', 'Reviewing the latest mockups', now + timedelta(minutes=30), 45, 'room-client-789', 1),
+        
+        # Recent/Past meetings
+        ('Weekly Sync', 'Past weekly sync', now - timedelta(days=1), 45, 'room-sync-past', 1),
+        ('Design Demo', 'UI/UX demo for the new features', now - timedelta(days=3), 60, 'room-demo-past', 2),
+    ]
+
+    for title, desc, start_time, duration, room_name, user_id in meetings_data:
+        # Check if room already seeded
+        cursor.execute("SELECT id FROM meetings WHERE room_name=?", (room_name,))
+        if not cursor.fetchone():
+            cursor.execute('''
+                INSERT INTO meetings (title, description, start_time, duration, is_instant, room_name, created_at, user_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (title, desc, start_time, duration, False, room_name, now, user_id))
+            print(f"Inserted meeting: {title}")
+
+    conn.commit()
+    conn.close()
+    print("Database seeding completed successfully!")
 
 if __name__ == "__main__":
-    seed_data()
+    seed_database()

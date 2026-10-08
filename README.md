@@ -1,43 +1,106 @@
-# Zoom Clone
+# Zoom Clone - Video Conferencing Platform
 
-## 1. Overview
-A full-stack, real-time video conferencing platform built as a clone of Zoom. This project implements a high-fidelity Zoom-like UI, real-time audio/video using LiveKit, and a robust backend for meeting scheduling and lifecycle management.
+A full-stack video conferencing application that closely replicates the core functionalities, design, and user experience of Zoom. Built as a Single Page Application (SPA) using Next.js, powered by a FastAPI Python backend, and uses LiveKit for real-time WebRTC audio/video infrastructure.
 
-## 2. Features
-- **Landing Dashboard**: View upcoming and recent meetings, start instant meetings, or join via ID.
-- **Instant & Scheduled Meetings**: Create meetings on the fly or schedule them for the future.
-- **Real-Time Video/Audio**: High-quality WebRTC powered by LiveKit.
-- **Screen Sharing & Chat**: Built-in screen sharing and real-time in-room text chat.
-- **Zoom-like UI**: Dark-themed meeting rooms, responsive video grids, and familiar control bars.
+## Features
 
-## 3. Architecture
-- **Frontend**: Next.js (App Router), Tailwind CSS v4, Zustand (UI State), LiveKit React Components.
-- **Backend**: Python FastAPI, SQLAlchemy, SQLite.
-- **Real-time Engine**: LiveKit Cloud SFU.
+### Core Features
+- **Landing Dashboard**: Clean Zoom-like UI with a navbar, quick action buttons (New Meeting, Join, Schedule), and sections for Upcoming and Recent meetings.
+- **Instant Meeting Creation**: One-click instant meeting generation with unique IDs and shareable links.
+- **Join Meeting**: Join active meetings via ID or invite link. Includes a pre-join screen to configure audio/video and display name.
+- **Schedule Meetings**: Full scheduling modal allowing configuration of Title, Description, Date, Time, and Duration.
+- **Meeting Management**: Edit or delete scheduled meetings directly from the dashboard.
 
-## 4. Local Setup
+### Bonus / Advanced Features
+- **Hybrid Authentication System**: 
+  - **Guest Mode (No Login Required)**: Users can instantly create, schedule, and join meetings as a default user without any friction.
+  - **Registered Users**: Includes a fully functional JWT-based Login/Signup system for a personalized experience.
+- **Host Controls**: Meeting hosts (identified by display name containing 'kunal', 'browser', or 'host') have elevated privileges to:
+  - Mute specific participants or Mute All
+  - Disable participants' cameras
+  - Remove/Kick participants from the meeting
+- **Responsive Design**: The UI is built with Tailwind CSS to be fully responsive across mobile, tablet, and desktop devices.
+
+## Tech Stack
+
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **State Management**: Zustand
+- **WebRTC**: LiveKit Components React
+
+### Backend
+- **Framework**: FastAPI (Python)
+- **Database**: SQLite
+- **ORM**: SQLAlchemy
+- **Authentication**: PyJWT, Passlib (bcrypt)
+- **Validation**: Pydantic
+
+## Project Structure
+
+- `/frontend`: Next.js application containing the UI, routing, state, and API integration.
+- `/backend`: FastAPI application containing the RESTful API, database models, and authentication logic.
+
+## Setup & Installation
 
 ### Prerequisites
-- Node.js 18+
-- Python 3.10+
-- LiveKit Cloud account (for API credentials)
+- Node.js (v18+)
+- Python (3.9+)
+- A LiveKit Cloud account (for WebRTC keys)
 
-### Backend Setup
-1. `cd backend`
-2. `python -m venv venv`
-3. Activate venv (`source venv/bin/activate` or `.\venv\Scripts\Activate.ps1`)
-4. `pip install -r requirements.txt`
-5. Copy `.env.example` to `.env` and fill in your `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and `LIVEKIT_URL`.
-6. Run the seed script: `python seed.py`
-7. Start server: `fastapi dev app/main.py` (runs on http://localhost:8000)
+### 1. Backend Setup
 
-### Frontend Setup
-1. `cd frontend`
-2. `npm install`
-3. Create `.env.local` with `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
-4. Run dev server: `npm run dev` (runs on http://localhost:3000)
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Create a `.env` file in the `backend` directory:
+   ```env
+   DATABASE_URL=sqlite:///./zoom_clone.db
+   LIVEKIT_API_KEY=your_api_key
+   LIVEKIT_API_SECRET=your_api_secret
+   JWT_SECRET_KEY=your_super_secret_key
+   ```
+5. Seed the database (Optional but recommended):
+   ```bash
+   python seed.py
+   ```
+6. Start the FastAPI server:
+   ```bash
+   fastapi dev app/main.py
+   ```
 
-## 5. Assumptions & Limitations
-- **Authentication**: Authentication is mocked using a default `user_id = 1` ("Kunal") as permitted by the assignment constraints.
-- **Chat**: Chat uses LiveKit Data Channels and is intentionally ephemeral (not persisted to the database).
-- **Timezones**: SQLite does not support native timezones natively, so timestamps are strictly handled as UTC by the FastAPI application.
+### 2. Frontend Setup
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env.local` file in the `frontend` directory:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-url
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Assumptions Made
+- **LiveKit for WebRTC**: To ensure high reliability, low latency, and a production-ready video conferencing experience, LiveKit was chosen over raw WebRTC/Socket.io. This handles NAT traversal, signaling, and SFU logic natively.
+- **Host Identification**: As per requirements, meeting host privileges are granted based on substring matching in the display name (e.g., 'kunal', 'browser', 'host') rather than strict database foreign key relationships in the live room, allowing guests to easily test host controls.
+- **Email Verification Mocking**: The signup flow simulates an email verification delay visually, but does not rely on a real SMTP server to ensure the assignment can be tested entirely locally.

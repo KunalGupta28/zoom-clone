@@ -17,6 +17,10 @@ class MeetingCreate(BaseModel):
             return v.astimezone(timezone.utc)
         return v
 
+class MeetingUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = None
+
 class MeetingResponse(BaseModel):
     id: int
     meeting_code: str
