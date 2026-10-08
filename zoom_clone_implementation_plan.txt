@@ -1,0 +1,2665 @@
+
+ZOOM CLONE — SENIOR DEVELOPER IMPLEMENTATION PLAN
+=================================================
+
+Purpose
+-------
+This document converts the Zoom Clone assignment analysis into an execution-ready
+implementation blueprint for a one-day development window.
+
+The goal is NOT to build a production-scale replacement for Zoom. The goal is to
+deliver a polished, functional Zoom-like video conferencing platform that:
+
+1. Satisfies every mandatory requirement.
+2. Implements the highest-value bonus features.
+3. Has a strong relational database design.
+4. Uses clean, modular frontend/backend architecture.
+5. Resembles the modern Zoom UX closely.
+6. Can be deployed and demonstrated reliably.
+7. Can be explained confidently during the evaluation interview.
+
+
+=================================================
+1. ASSIGNMENT REQUIREMENTS — PRIORITY BREAKDOWN
+=================================================
+
+P0 — MUST HAVE
+--------------
+
+A. Landing Dashboard
+   - Zoom-style dashboard/homepage.
+   - Clean professional UI.
+   - Navbar with profile/settings placeholders.
+   - New Meeting button.
+   - Join Meeting button.
+   - Schedule Meeting button.
+   - Upcoming Meetings section.
+   - Recent Meetings section.
+
+B. Instant Meeting Creation
+   - Create a meeting instantly.
+   - Generate unique Meeting ID.
+   - Generate shareable invite link.
+   - Redirect user into the meeting room.
+
+C. Join Meeting
+   - Join using Meeting ID.
+   - Join using invite link.
+   - Enter display name before joining.
+   - Validate that the meeting exists.
+
+D. Schedule Meeting
+   - Title.
+   - Description.
+   - Date.
+   - Time.
+   - Duration.
+   - Auto-generated meeting link.
+   - Persist meeting in SQLite.
+   - Show scheduled meeting in Upcoming Meetings.
+
+P1 — HIGH VALUE BONUSES
+-----------------------
+
+1. Responsive design
+   - Desktop.
+   - Tablet.
+   - Mobile.
+
+2. Host controls
+   - Mute participant.
+   - Mute all.
+   - Remove participant.
+
+3. Realtime meeting experience
+   - Camera.
+   - Microphone.
+   - Participant presence.
+   - Screen sharing.
+   - Chat.
+   - Leave/end meeting.
+
+Authentication is optional because the assignment explicitly permits assuming
+a default logged-in user.
+
+P2 — DO NOT PRIORITIZE IN THE ONE-DAY WINDOW
+--------------------------------------------
+
+Avoid spending time on:
+- OAuth.
+- Full login/signup.
+- Password reset.
+- Email invitations.
+- Calendar integration.
+- Recording backend.
+- Captions.
+- Reactions.
+- Waiting room.
+- Recurring meetings.
+- Admin dashboard.
+- Analytics.
+- Redis.
+- Kafka.
+- Kubernetes.
+- Microservices.
+- PostgreSQL migration.
+- Event sourcing.
+
+Senior engineering for this assignment means deliberately controlling scope.
+
+
+=========================================
+2. PRODUCT / UX REFERENCE PRINCIPLES
+=========================================
+
+The application should FEEL like a modern Zoom-style product rather than a
+generic video-call application.
+
+Dashboard characteristics:
+- Light, clean workspace.
+- Clear hierarchy.
+- Prominent meeting actions.
+- Scheduled meetings are easy to scan.
+- Minimal, restrained navigation.
+- Professional spacing and typography.
+
+Meeting room characteristics:
+- Dark meeting canvas.
+- Video tiles dominate the screen.
+- Bottom control bar.
+- Chat and participant panels slide in from the side.
+- Host controls appear inside participant management.
+- Responsive layout adapts to participant count.
+
+Important principle:
+"Feels like Zoom" is the target.
+Do NOT copy an existing repository or paste an existing implementation.
+Use the product behavior and visual language as reference while implementing
+your own components, business logic, schema, and architecture.
+
+
+=================================
+3. FINAL RECOMMENDED TECH STACK
+=================================
+
+FRONTEND
+--------
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Lucide React
+- Native browser APIs where useful
+
+BACKEND
+-------
+- Python
+- FastAPI
+- Pydantic
+- SQLAlchemy 2.x
+
+DATABASE
+--------
+- SQLite
+
+REALTIME MEDIA
+--------------
+- LiveKit
+- WebRTC
+
+DEPLOYMENT
+----------
+- Vercel: frontend
+- Render or Railway: FastAPI backend
+- LiveKit Cloud: realtime media
+
+DEVELOPMENT / DEBUGGING
+-----------------------
+- Git
+- GitHub
+- VS Code / Cursor
+- FastAPI Swagger / OpenAPI
+- Chrome DevTools
+
+
+====================================
+4. FINAL ARCHITECTURE DECISION
+====================================
+
+RECOMMENDED ARCHITECTURE
+------------------------
+
+                    +-----------------------+
+                    |       Next.js         |
+                    |   React + TypeScript  |
+                    |       Tailwind        |
+                    +----------+------------+
+                               |
+                               | REST / HTTPS
+                               v
+                    +-----------------------+
+                    |       FastAPI         |
+                    | Business/Application  |
+                    |      Layer            |
+                    +-----+-----------+-----+
+                          |           |
+                     SQL  |           | Token generation
+                          |           |
+                          v           v
+                  +-----------+   +-----------+
+                  |  SQLite   |   |  LiveKit  |
+                  | Database  |   |    SFU     |
+                  +-----------+   +-----+-----+
+                                        |
+                              WebRTC Audio/Video
+                                        |
+                                        v
+                                  Other Clients
+
+
+RESPONSIBILITY SPLIT
+--------------------
+
+Next.js:
+- UI.
+- Routing.
+- Forms.
+- Dashboard.
+- Meeting room presentation.
+- Client-side interaction.
+- Browser media controls.
+
+FastAPI:
+- Meeting creation.
+- Meeting validation.
+- Scheduling.
+- Upcoming/recent queries.
+- Join registration.
+- Meeting lifecycle.
+- Participant session persistence.
+- LiveKit token generation.
+- Application-level validation.
+
+SQLite:
+- Users.
+- Meetings.
+- Participant records.
+- Meeting lifecycle data.
+
+LiveKit:
+- Realtime audio.
+- Realtime video.
+- Participant tracks.
+- Realtime participant events.
+- Screen sharing transport.
+- Media routing.
+
+
+WHY LIVEKIT?
+------------
+
+A hand-built WebRTC/P2P system requires signaling, SDP negotiation, ICE
+candidate handling, peer discovery, reconnect behavior, track management,
+and network edge-case handling.
+
+For a one-day assignment, that creates unnecessary implementation risk.
+
+LiveKit provides a production-oriented WebRTC/SFU layer while allowing the
+application's UI, meeting lifecycle, database, APIs, and host controls to
+remain custom.
+
+Preferred priority:
+LiveKit > MediaSoup > hand-built P2P
+
+provided the implementation team can explain LiveKit's role clearly.
+
+
+=================================
+5. REALTIME ARCHITECTURE OPTIONS
+=================================
+
+OPTION A — LIVEKIT (RECOMMENDED)
+--------------------------------
+
+Next.js
+   |
+   +---- REST ----> FastAPI
+   |                 |
+   |                 +---- SQLite
+   |
+   +---- token ----> LiveKit
+                         |
+                      WebRTC
+                         |
+                  Participants
+
+Use LiveKit for:
+- Audio.
+- Video.
+- Screen sharing.
+- Participant state/events.
+- Meeting room connectivity.
+- Data messages if desired for chat.
+
+Use FastAPI for:
+- Durable application state.
+- Authorization decisions.
+- Meeting records.
+- Participant records.
+- Token creation.
+
+
+OPTION B — CUSTOM WEBRTC/P2P
+----------------------------
+
+Next.js
+   |
+   +---- REST ----> FastAPI ----> SQLite
+   |
+   +---- WebSocket -> Signaling
+                          |
+                     SDP / ICE
+                          |
+                      WebRTC P2P
+
+Required concepts:
+- join
+- offer
+- answer
+- ICE candidates
+- peer discovery
+- peer departure
+- reconnect
+- track updates
+
+Do NOT choose this option for the one-day implementation unless WebRTC is
+already highly familiar and a stable reusable signaling strategy is available.
+
+
+=====================================
+6. DATABASE DESIGN — RECOMMENDED
+=====================================
+
+The assignment explicitly evaluates database design.
+
+The schema should demonstrate:
+- Normalized relationships.
+- Foreign keys.
+- Unique meeting codes.
+- Participant-to-meeting relationships.
+- Meeting lifecycle.
+- Timestamps.
+- Guest participation without requiring authentication.
+
+
+TABLE: users
+------------
+
+id
+  INTEGER PRIMARY KEY AUTOINCREMENT
+
+name
+  TEXT NOT NULL
+
+email
+  TEXT UNIQUE NOT NULL
+
+avatar_url
+  TEXT NULL
+
+created_at
+  DATETIME NOT NULL
+
+
+TABLE: meetings
+---------------
+
+id
+  INTEGER PRIMARY KEY AUTOINCREMENT
+
+meeting_code
+  TEXT UNIQUE NOT NULL
+
+title
+  TEXT NOT NULL
+
+description
+  TEXT NULL
+
+host_user_id
+  INTEGER NOT NULL
+  FOREIGN KEY -> users.id
+
+scheduled_at
+  DATETIME NULL
+
+duration_minutes
+  INTEGER NOT NULL
+
+status
+  TEXT NOT NULL
+
+invite_slug
+  TEXT UNIQUE NOT NULL
+
+created_at
+  DATETIME NOT NULL
+
+started_at
+  DATETIME NULL
+
+ended_at
+  DATETIME NULL
+
+
+MEETING STATUS VALUES
+---------------------
+
+scheduled
+active
+ended
+cancelled
+
+
+TABLE: meeting_participants
+---------------------------
+
+id
+  INTEGER PRIMARY KEY AUTOINCREMENT
+
+meeting_id
+  INTEGER NOT NULL
+  FOREIGN KEY -> meetings.id
+
+user_id
+  INTEGER NULL
+  FOREIGN KEY -> users.id
+
+display_name
+  TEXT NOT NULL
+
+role
+  TEXT NOT NULL
+
+joined_at
+  DATETIME NOT NULL
+
+left_at
+  DATETIME NULL
+
+
+WHY user_id CAN BE NULL
+-----------------------
+
+Authentication is not required.
+
+Example registered/default user:
+- user_id = 1
+- display_name = "Kunal"
+
+Example guest:
+- user_id = NULL
+- display_name = "Rahul"
+
+
+RELATIONSHIPS
+-------------
+
+users 1 ---- N meetings
+users 1 ---- N meeting_participants
+meetings 1 ---- N meeting_participants
+
+
+WHY SEPARATE meeting_participants?
+----------------------------------
+
+A meeting has many participants, and a user/guest may participate in many
+different meetings.
+
+The participant table also stores meeting-session-specific information:
+- display name
+- role
+- joined_at
+- left_at
+
+This is much cleaner than storing only a user_name inside the meeting record.
+
+
+=========================================
+7. PUBLIC MEETING ID / INTERNAL DB ID
+=========================================
+
+Do NOT expose the SQLite row ID as the public meeting identifier.
+
+Bad:
+    /meeting/52
+
+Better:
+    /meeting/84739261504
+
+Internal DB:
+    id = 52
+
+Public:
+    meeting_code = "84739261504"
+
+Use a collision-resistant 10- or 11-digit style meeting code inspired by
+modern video conferencing UX.
+
+Database must enforce:
+    UNIQUE(meeting_code)
+
+Generation should still defensively retry on the extremely unlikely event
+of a collision.
+
+
+======================================
+8. URL / ROUTING ARCHITECTURE
+======================================
+
+Frontend routes:
+
+/
+  Dashboard
+
+/join
+  Join workflow
+
+/schedule
+  Schedule workflow
+
+/meeting/[meetingCode]
+  Meeting room
+
+/profile
+  Optional placeholder
+
+Recommended invite format:
+
+https://yourdomain.com/meeting/84739261504
+
+
+JOIN URL PARSING
+----------------
+
+The Join workflow should accept either:
+
+1. Raw meeting code:
+   84739261504
+
+2. Full invite link:
+   https://yourdomain.com/meeting/84739261504
+
+Normalize the input before calling the API.
+
+
+====================================
+9. BACKEND PROJECT STRUCTURE
+====================================
+
+backend/
+|
++-- app/
+|   |
+|   +-- main.py
+|   +-- database.py
+|   |
+|   +-- models/
+|   |   +-- user.py
+|   |   +-- meeting.py
+|   |   +-- participant.py
+|   |
+|   +-- schemas/
+|   |   +-- user.py
+|   |   +-- meeting.py
+|   |   +-- participant.py
+|   |
+|   +-- routers/
+|   |   +-- meetings.py
+|   |   +-- participants.py
+|   |   +-- health.py
+|   |
+|   +-- services/
+|   |   +-- meeting_service.py
+|   |   +-- participant_service.py
+|   |   +-- livekit_service.py
+|   |
+|   +-- repositories/
+|   |   +-- meeting_repository.py
+|   |   +-- participant_repository.py
+|   |
+|   +-- realtime/
+|       +-- events.py
+|
++-- seed.py
++-- requirements.txt
++-- .env.example
+
+
+SEPARATION OF CONCERNS
+----------------------
+
+router
+  -> validates HTTP request / response
+  -> calls service
+
+service
+  -> business rules
+  -> lifecycle decisions
+  -> validation logic
+
+repository
+  -> database operations
+
+This structure makes the system easier to test, maintain, and explain.
+
+
+====================================
+10. FRONTEND PROJECT STRUCTURE
+====================================
+
+frontend/
+|
++-- app/
+|   +-- page.tsx
+|   +-- join/
+|   |   +-- page.tsx
+|   +-- schedule/
+|   |   +-- page.tsx
+|   +-- meeting/
+|       +-- [meetingCode]/
+|           +-- page.tsx
+|
++-- components/
+|   +-- dashboard/
+|   |   +-- Navbar.tsx
+|   |   +-- QuickActions.tsx
+|   |   +-- UpcomingMeetings.tsx
+|   |   +-- RecentMeetings.tsx
+|   |   +-- MeetingCard.tsx
+|   |
+|   +-- meeting/
+|   |   +-- MeetingRoom.tsx
+|   |   +-- VideoGrid.tsx
+|   |   +-- VideoTile.tsx
+|   |   +-- MeetingControls.tsx
+|   |   +-- ParticipantsPanel.tsx
+|   |   +-- ChatPanel.tsx
+|   |   +-- ShareScreenButton.tsx
+|   |
+|   +-- modals/
+|       +-- JoinMeetingModal.tsx
+|       +-- ScheduleMeetingModal.tsx
+|
++-- hooks/
+|   +-- useMeeting.ts
+|   +-- useParticipants.ts
+|   +-- useMediaControls.ts
+|
++-- lib/
+|   +-- api.ts
+|   +-- meeting.ts
+|   +-- utils.ts
+|
++-- types/
+|   +-- meeting.ts
+|   +-- participant.ts
+|
++-- public/
++-- package.json
+
+
+========================================
+11. BACKEND API CONTRACT
+========================================
+
+1. Health check
+---------------
+GET /api/health
+
+Response:
+{
+  "status": "ok"
+}
+
+
+2. Create meeting
+-----------------
+POST /api/meetings
+
+Request:
+{
+  "title": "Instant Meeting",
+  "description": null,
+  "scheduled_at": null,
+  "duration_minutes": 60,
+  "type": "instant"
+}
+
+Response:
+{
+  "id": 12,
+  "meeting_code": "84739261504",
+  "meeting_url": "/meeting/84739261504",
+  "status": "active"
+}
+
+
+3. Schedule meeting
+-------------------
+POST /api/meetings
+
+Request:
+{
+  "title": "Project Discussion",
+  "description": "Sprint planning",
+  "scheduled_at": "2026-10-09T15:30:00Z",
+  "duration_minutes": 45,
+  "type": "scheduled"
+}
+
+Response:
+{
+  "id": 13,
+  "meeting_code": "91382746510",
+  "meeting_url": "/meeting/91382746510",
+  "status": "scheduled"
+}
+
+
+4. Get meeting
+--------------
+GET /api/meetings/{meeting_code}
+
+Used by Join workflow.
+
+Response:
+{
+  "meeting_code": "84739261504",
+  "title": "Project Discussion",
+  "description": "Sprint planning",
+  "status": "scheduled",
+  "host_name": "Kunal"
+}
+
+
+5. Upcoming meetings
+--------------------
+GET /api/meetings/upcoming
+
+Returns upcoming scheduled meetings ordered by start time.
+
+
+6. Recent meetings
+------------------
+GET /api/meetings/recent
+
+Returns recent ended/participated meetings.
+
+
+7. Join meeting
+---------------
+POST /api/meetings/{meeting_code}/join
+
+Request:
+{
+  "display_name": "Rahul"
+}
+
+Response:
+{
+  "participant_id": 84,
+  "meeting_id": 12,
+  "role": "participant"
+}
+
+
+8. Create LiveKit token
+-----------------------
+POST /api/meetings/{meeting_code}/token
+
+Request:
+{
+  "display_name": "Rahul"
+}
+
+Response:
+{
+  "token": "....",
+  "server_url": "wss://..."
+}
+
+
+OPTIONAL FUTURE ENDPOINTS
+-------------------------
+
+POST /api/meetings/{meeting_code}/start
+POST /api/meetings/{meeting_code}/end
+POST /api/meetings/{meeting_code}/participants/{id}/mute
+DELETE /api/meetings/{meeting_code}/participants/{id}
+
+Implement only if needed by the chosen realtime design.
+
+
+=====================================
+12. MEETING LIFECYCLE / STATE MACHINE
+=====================================
+
+Scheduled meeting:
+
+CREATE
+  |
+  v
+SCHEDULED
+  |
+ start
+  |
+  v
+ACTIVE
+  |
+ end
+  |
+  v
+ENDED
+
+
+Instant meeting:
+
+CREATE
+  |
+  v
+ACTIVE
+  |
+ end
+  |
+  v
+ENDED
+
+
+CANCELLED is an optional terminal state for scheduled meetings.
+
+
+BUSINESS RULES
+--------------
+
+- Scheduled meetings cannot be treated as active simply because they exist.
+- Instant meetings are active immediately after successful creation.
+- Starting a scheduled meeting changes status to active.
+- Ending a meeting changes status to ended.
+- Recent Meetings should generally derive from ended meetings and/or recent
+  participant history.
+- Joining an invalid meeting must return a clear not-found response.
+
+
+==================================
+13. DASHBOARD IMPLEMENTATION PLAN
+==================================
+
+TOP NAVIGATION
+--------------
+
+Include:
+- Brand / Zoom Clone logo treatment.
+- Home.
+- Meetings or navigation placeholder.
+- Settings placeholder.
+- User/avatar area.
+
+Keep navigation visually restrained.
+
+
+WELCOME / HERO AREA
+-------------------
+
+Example:
+"Good afternoon, Kunal"
+
+Optional supporting line:
+"Start a meeting or join one with your team."
+
+
+QUICK ACTIONS
+-------------
+
+Three prominent action cards/buttons:
+
+1. New Meeting
+   Icon: video/camera
+   Action: create instant meeting and enter room.
+
+2. Join Meeting
+   Icon: arrow/enter
+   Action: open join workflow.
+
+3. Schedule Meeting
+   Icon: calendar/plus
+   Action: open schedule form.
+
+
+UPCOMING MEETINGS
+-----------------
+
+Each MeetingCard can show:
+- Meeting title.
+- Date.
+- Time.
+- Duration.
+- Meeting code.
+- Status.
+- Start/Join action.
+- Copy invite link.
+- Overflow/menu action.
+
+
+RECENT MEETINGS
+---------------
+
+Each row/card can show:
+- Title.
+- Previous date/time.
+- Meeting code.
+- Join/Details action.
+
+
+IMPORTANT UX DISTINCTION
+------------------------
+
+Instant meeting:
+New Meeting -> Create -> Enter Meeting Room
+
+Scheduled:
+Schedule -> Save -> Dashboard -> Upcoming Meeting -> Start
+
+Do NOT automatically enter the room after scheduling.
+
+
+==================================
+14. INSTANT MEETING WORKFLOW
+==================================
+
+1. User clicks New Meeting.
+2. Frontend sends POST /api/meetings.
+3. Backend:
+   - generates meeting code.
+   - creates meeting record.
+   - sets status = active.
+   - assigns default user as host.
+4. Backend returns meeting code + invite URL.
+5. Frontend navigates to:
+   /meeting/{meetingCode}
+6. Meeting room initializes.
+7. Host connects to LiveKit.
+8. Host can copy/share invitation link.
+
+
+OPTIONAL CREATION CONFIRMATION
+------------------------------
+
+Before entering the room, show:
+
+Meeting created
+
+847 392 615 04
+
+https://yourdomain.com/meeting/84739261504
+
+[ Copy Invite Link ]
+
+[ Start Meeting ]
+
+For a truly instant-meeting UX, it is also acceptable to create and
+redirect directly into the room, with Copy Invite Link available inside
+the room.
+
+
+================================
+15. JOIN MEETING WORKFLOW
+================================
+
+STEP 1 — JOIN MODAL/PAGE
+------------------------
+
+Title:
+Join a Meeting
+
+Input:
+Meeting ID or Personal Link
+
+Button:
+Join
+
+
+STEP 2 — NORMALIZE INPUT
+------------------------
+
+Examples:
+84739261504
+https://yourdomain.com/meeting/84739261504
+
+Extract:
+84739261504
+
+
+STEP 3 — VALIDATE BACKEND
+-------------------------
+
+GET /api/meetings/84739261504
+
+If valid:
+continue.
+
+If invalid:
+show:
+"Meeting not found."
+
+
+STEP 4 — DISPLAY NAME
+----------------------
+
+Prompt:
+"Your Name"
+
+Validation:
+- Required.
+- Trim whitespace.
+- Reasonable max length.
+
+
+STEP 5 — PRE-JOIN
+------------------
+
+Show:
+- Camera preview.
+- Camera toggle.
+- Microphone toggle.
+- Display name.
+- Join button.
+
+
+STEP 6 — CONNECT
+----------------
+
+On Join:
+- Register participant with backend.
+- Request LiveKit token.
+- Connect to LiveKit room.
+- Start requested media tracks.
+- Navigate/render inside meeting room.
+
+
+====================================
+16. PRE-JOIN SCREEN DESIGN
+====================================
+
+Structure:
+
++-----------------------------------------------+
+|                                               |
+|                CAMERA PREVIEW                |
+|                                               |
+|       [ Turn camera off ]                     |
+|       [ Mute microphone ]                     |
+|                                               |
+|       Your name                               |
+|       [ Rahul Sharma ]                        |
+|                                               |
+|                 [ Join ]                      |
+|                                               |
++-----------------------------------------------+
+
+Important:
+Camera/microphone permissions can be denied by the browser.
+
+The UI must handle:
+- permission denied.
+- device unavailable.
+- camera unavailable.
+- microphone unavailable.
+
+
+================================
+17. MEETING ROOM IMPLEMENTATION
+================================
+
+ROOM STRUCTURE
+--------------
+
++-----------------------------------------------------------+
+| Meeting title                               Participants  |
++---------------------------------------------+-------------+
+|                                             |             |
+|              VIDEO GRID                     | Participants|
+|                                             | panel       |
+|                                             |             |
+|                                             |             |
++---------------------------------------------+-------------+
+| Mic | Camera | Participants | Chat | Share | Leave       |
++-----------------------------------------------------------+
+
+
+CORE COMPONENTS
+---------------
+
+MeetingRoom
+  |
+  +-- VideoGrid
+  |     +-- VideoTile
+  |     +-- VideoTile
+  |     +-- VideoTile
+  |
+  +-- MeetingControls
+  |
+  +-- ParticipantsPanel
+  |
+  +-- ChatPanel
+
+
+================================
+18. VIDEO GRID LOGIC
+================================
+
+Use a dynamic responsive grid.
+
+Suggested behavior:
+
+1 participant:
+   1 x 1
+
+2 participants:
+   2 columns x 1 row
+
+3-4 participants:
+   2 x 2
+
+5-6 participants:
+   3 x 2
+
+7-9 participants:
+   3 x 3
+
+
+CSS concept:
+grid-template-columns:
+repeat(auto-fit, minmax(280px, 1fr))
+
+
+Do not hardcode one layout for all participant counts.
+
+
+===================================
+19. VIDEO TILE REQUIREMENTS
+===================================
+
+Each tile should show:
+- Video track.
+- Participant name.
+- Mic state.
+- Host badge where appropriate.
+- Placeholder/avatar if camera is off.
+- Active speaker treatment if available.
+
+When video is disabled:
+display:
+- avatar/initial.
+- participant name.
+- muted indicator where applicable.
+
+
+=====================================
+20. MEETING CONTROL BAR
+=====================================
+
+Minimum controls:
+
+- Mute / Unmute
+- Start / Stop Video
+- Participants
+- Chat
+- Share Screen
+- Leave
+
+Suggested UX:
+- Controls fixed near bottom.
+- Large click targets.
+- Tooltip/label where useful.
+- Active/inactive states visually obvious.
+- Leave button visually distinct.
+
+
+=========================================
+21. CAMERA / MICROPHONE IMPLEMENTATION
+=========================================
+
+Native/browser concepts:
+- Media tracks.
+- Audio enable/disable.
+- Video enable/disable.
+
+With LiveKit:
+- Connect to room.
+- Publish local audio track.
+- Publish local video track.
+- Toggle publication/track state.
+- Subscribe to remote participant tracks.
+
+
+Expected state:
+
+isMicOn
+isCameraOn
+isScreenSharing
+
+
+Do not make media state dependent only on local UI state.
+Where possible, derive it from the actual track/publication state.
+
+
+=========================
+22. SCREEN SHARE
+=========================
+
+Use:
+navigator.mediaDevices.getDisplayMedia()
+
+Workflow:
+
+1. User clicks Share Screen.
+2. Browser asks which screen/window/tab to share.
+3. Create screen capture track.
+4. Publish to realtime room.
+5. Render shared screen.
+6. Stop track when user stops sharing.
+
+
+Important:
+Production deployment should use HTTPS because browser screen capture APIs
+require a secure context in supported environments.
+
+Handle cancellation gracefully:
+- User cancels browser chooser.
+- Screen sharing ends externally.
+
+
+==================
+23. CHAT DESIGN
+==================
+
+Simple meeting chat:
+
+Message object:
+{
+  participant_id,
+  display_name,
+  text,
+  created_at
+}
+
+For one-day scope:
+- Keep chat realtime.
+- Do not prioritize long-term persistence.
+- LiveKit data messages are acceptable.
+- A lightweight in-memory strategy is also acceptable for a prototype,
+  provided it works reliably for the demo.
+
+
+UI:
+
+Chat
+
+Rahul
+Are we starting?
+
+Kunal
+Yes, give me 2 minutes.
+
+Priya
+Okay.
+
+[ Type message...                         ] [Send]
+
+
+=================================
+24. PARTICIPANTS PANEL
+=================================
+
+Example:
+
+Participants (3)
+
+Kunal
+Host
+
+Rahul
+[Mute] [Remove]
+
+Priya
+[Mute] [Remove]
+
+----------------
+[Mute All]
+
+
+The normal participant should NOT see host-only management buttons.
+
+
+=================================
+25. HOST CONTROLS
+=================================
+
+Required bonus scope:
+
+A. Mute participant.
+B. Mute all.
+C. Remove participant.
+
+Implementation concept:
+
+Host action
+   |
+   v
+Validate role on server/application state
+   |
+   v
+Broadcast/perform action in realtime
+   |
+   v
+Target participant UI/media changes
+
+
+SECURITY PRINCIPLE
+------------------
+
+Do NOT trust a frontend request like:
+
+{
+  "role": "host"
+}
+
+The backend should determine whether the current participant is the host.
+
+Meeting ID identifies a meeting.
+Meeting ID does NOT by itself authorize host actions.
+
+
+RECOMMENDED BEHAVIOR
+--------------------
+
+Host:
+- mute participant.
+- mute all.
+- remove participant.
+
+Participant:
+- can unmute themselves after being muted.
+- cannot remove others.
+- cannot execute host-only operations.
+
+
+================================
+26. PARTICIPANT SESSION MODEL
+================================
+
+When a participant joins:
+
+CREATE participant record:
+- meeting_id
+- user_id if available
+- display_name
+- role
+- joined_at
+
+When leaving:
+
+UPDATE:
+- left_at
+
+Optional:
+- persist active/left state.
+
+When reconnecting:
+- avoid creating confusing duplicate active sessions if the implementation
+  can identify the same participant session reliably.
+
+
+======================================
+27. TIMEZONE / SCHEDULED MEETING RULES
+======================================
+
+Use UTC internally.
+
+Frontend:
+- display local time.
+
+Backend/DB:
+- store UTC.
+
+Example:
+
+User sees:
+15 Oct 2026, 4:00 PM IST
+
+Backend normalized timestamp:
+2026-10-15T10:30:00Z
+
+Benefits:
+- consistent comparisons.
+- fewer timezone bugs.
+- predictable upcoming/recent queries.
+
+
+=================================
+28. UPCOMING / RECENT QUERY LOGIC
+=================================
+
+Upcoming:
+
+SELECT *
+FROM meetings
+WHERE scheduled_at > CURRENT_TIMESTAMP
+  AND status = 'scheduled'
+ORDER BY scheduled_at ASC;
+
+
+Recent:
+
+SELECT *
+FROM meetings
+WHERE status = 'ended'
+ORDER BY ended_at DESC
+LIMIT 10;
+
+
+Depending on product interpretation, recent history can also include meetings
+the current user recently participated in.
+
+
+=================================
+29. SEED DATABASE DATA
+=================================
+
+The assignment explicitly asks for sample data.
+
+Seed:
+- 1 default user.
+- 3 upcoming meetings.
+- 3 recent meetings.
+
+Example upcoming:
+1. Project Sync
+2. Team Review
+3. Client Discussion
+
+Example recent:
+1. Daily Standup
+2. Sprint Planning
+3. Design Review
+
+Use realistic timestamps so the dashboard looks complete immediately after setup.
+
+
+===========================================
+30. FRONTEND STATE MODEL — MEETING ROOM
+===========================================
+
+Conceptual type:
+
+type MeetingState = {
+  meetingCode: string
+  title: string
+
+  currentUser: Participant
+
+  participants: Participant[]
+
+  isMicOn: boolean
+  isCameraOn: boolean
+  isScreenSharing: boolean
+
+  activePanel: "none" | "chat" | "participants"
+
+  messages: ChatMessage[]
+}
+
+
+STATE OWNERSHIP
+---------------
+
+MeetingRoom:
+- overall meeting state.
+
+VideoGrid:
+- mostly presentation.
+
+MeetingControls:
+- control callbacks.
+
+ParticipantsPanel:
+- participant list + host actions.
+
+ChatPanel:
+- chat UI + messaging callback.
+
+This avoids a giant page component containing all logic.
+
+
+=====================================
+31. FRONTEND COMPONENT CONTRACTS
+=====================================
+
+MeetingCard
+-----------
+
+Receives:
+- title
+- date
+- time
+- duration
+- meeting code
+- status
+- onStart
+- onJoin
+- onCopyLink
+
+
+JoinMeetingModal
+----------------
+
+Responsible for:
+- meeting input.
+- link/code normalization.
+- loading.
+- error state.
+- continue.
+
+
+ScheduleMeetingModal
+--------------------
+
+Responsible for:
+- title.
+- description.
+- date.
+- time.
+- duration.
+- submit.
+
+
+MeetingControls
+---------------
+
+Presentational callbacks:
+
+onMute()
+onToggleVideo()
+onParticipants()
+onChat()
+onShareScreen()
+onLeave()
+
+
+========================================
+32. ERROR HANDLING REQUIREMENTS
+========================================
+
+User-friendly errors:
+
+Invalid meeting:
+  "Meeting not found."
+
+Blank display name:
+  "Please enter your name."
+
+Invalid duration:
+  "Duration must be greater than 0."
+
+Schedule validation:
+  "Please select a future date and time."
+
+Network failure:
+  "Unable to connect to the server. Please try again."
+
+Camera permission:
+  "Camera access was blocked. You can continue without video."
+
+Microphone permission:
+  "Microphone access was blocked. You can continue muted."
+
+Room connection failure:
+  "Unable to connect to the meeting."
+
+
+Do not display raw stack traces to users.
+
+
+====================================
+33. ONE-DAY EXECUTION TIMELINE
+====================================
+
+HOUR 0–1
+---------
+ARCHITECTURE + PROJECT SKELETON
+
+Tasks:
+- Create frontend.
+- Create backend.
+- Add Git repository.
+- Configure environment files.
+- Configure CORS.
+- Install packages.
+- Create basic app entry points.
+
+Do NOT spend time on visual polish yet.
+
+
+HOUR 1–3
+--------
+DATABASE + CORE BACKEND APIs
+
+Tasks:
+- Create SQLAlchemy models.
+- Create SQLite database.
+- Configure foreign keys.
+- Seed sample data.
+- Implement:
+  POST /meetings
+  GET /meetings/{code}
+  GET /meetings/upcoming
+  GET /meetings/recent
+  POST /meetings/{code}/join
+- Add Pydantic schemas.
+- Test APIs through Swagger.
+
+Milestone:
+Backend CRUD and validation work without frontend.
+
+
+HOUR 3–5
+--------
+DASHBOARD
+
+Build:
+- Navbar.
+- Welcome section.
+- New Meeting.
+- Join.
+- Schedule.
+- Upcoming meetings.
+- Recent meetings.
+- Meeting cards.
+
+Milestone:
+Create and schedule actions work end-to-end with dashboard refresh.
+
+
+HOUR 5–6.5
+----------
+JOIN FLOW
+
+Build:
+- Join modal/page.
+- ID/link parser.
+- Meeting validation.
+- Display-name step.
+- Pre-join screen.
+
+Milestone:
+Valid and invalid meeting IDs behave correctly.
+
+
+HOUR 6.5–10
+-----------
+REALTIME MEETING ROOM
+
+LiveKit tasks:
+- Token generation.
+- Room connection.
+- Local camera.
+- Local mic.
+- Remote participants.
+- Track rendering.
+- Participant list.
+- Disconnect.
+- Mute.
+- Camera toggle.
+- Screen share.
+
+Milestone:
+Two browser windows can successfully join the same meeting and see/hear
+one another.
+
+
+HOUR 10–12
+----------
+HOST CONTROLS
+
+Implement:
+- Participant role.
+- Mute participant.
+- Mute all.
+- Remove participant.
+- Host-only UI.
+
+
+HOUR 12–14
+----------
+ZOOM-QUALITY VISUAL POLISH
+
+Focus on:
+- Spacing.
+- Typography.
+- Button hierarchy.
+- Borders.
+- Shadows.
+- Hover states.
+- Selected states.
+- Icon sizing.
+- Dark meeting room.
+- Bottom toolbar.
+- Video tile proportions.
+- Side-panel treatment.
+
+
+HOUR 14–15.5
+------------
+RESPONSIVE DESIGN
+
+Test:
+- 1440 x 900
+- 1280 x 720
+- 1024 x 768
+- 768 x 1024
+- 390 x 844
+
+Desktop:
+- full navigation.
+- full participant/chat panels.
+
+Tablet:
+- compact navigation/panels.
+
+Mobile:
+- controls collapse.
+- chat/participants become drawers.
+
+
+HOUR 15.5–17
+------------
+DEPLOYMENT
+
+Deploy backend first.
+Then frontend.
+
+Verify:
+- frontend -> backend.
+- frontend -> realtime service.
+- database works.
+- environment variables are correct.
+- CORS is correct.
+- HTTPS is active.
+- camera/microphone/screen share work.
+
+
+HOUR 17–18
+----------
+README
+
+Include:
+- Project overview.
+- Feature list.
+- Architecture.
+- Stack.
+- Project structure.
+- Database schema.
+- API documentation.
+- Environment variables.
+- Local setup.
+- Deployment instructions.
+- Assumptions.
+- Limitations.
+- Screenshots.
+
+
+HOUR 18–20
+----------
+FINAL QA + INTERVIEW PREPARATION
+
+Run end-to-end demo.
+
+Open two separate browser sessions.
+
+Browser A:
+- create instant meeting.
+
+Browser B:
+- open invite link.
+- enter name.
+- join.
+
+Verify:
+- A sees B.
+- B sees A.
+- audio.
+- video.
+- participant updates.
+- mute.
+- screen share.
+- chat.
+- host removal.
+
+Then test:
+- schedule.
+- refresh.
+- upcoming meeting remains.
+- join using Meeting ID.
+- recent history.
+- invalid link.
+- permission errors.
+
+
+===================================
+34. CORE DEMO CHECKLIST
+===================================
+
+MANDATORY
+---------
+
+[ ] Dashboard loads.
+[ ] New Meeting works.
+[ ] Meeting ID generated.
+[ ] Invite link generated.
+[ ] Redirect to meeting room.
+[ ] Join using Meeting ID.
+[ ] Join using invite link.
+[ ] Display name required.
+[ ] Meeting validation works.
+[ ] Pre-join screen works.
+[ ] Schedule Meeting works.
+[ ] Scheduled meeting persists.
+[ ] Upcoming meetings shown.
+[ ] Recent meetings shown.
+
+
+HIGH-VALUE BONUS
+----------------
+
+[ ] Desktop responsive.
+[ ] Tablet responsive.
+[ ] Mobile responsive.
+[ ] Camera works.
+[ ] Microphone works.
+[ ] Participants appear/disappear.
+[ ] Chat works.
+[ ] Screen sharing works.
+[ ] Host can mute participant.
+[ ] Host can mute all.
+[ ] Host can remove participant.
+
+
+=========================================
+35. HIGHEST-RISK BUGS TO HUNT FIRST
+=========================================
+
+1. Backend creates meeting but dashboard does not update.
+
+2. Invite URL returns 404 after deployment.
+
+3. Frontend still points to localhost:8000 in production.
+
+4. CORS prevents frontend/backend communication.
+
+5. LiveKit credentials/environment variables are wrong.
+
+6. WebRTC works locally but fails in production.
+
+7. Meeting code generation can collide.
+
+8. Participant leaves visually but remains active.
+
+9. Host controls are exposed to normal participants.
+
+10. Scheduled time displays incorrectly due to timezone handling.
+
+11. Camera permission denial crashes the pre-join page.
+
+12. Microphone permission denial prevents joining entirely.
+
+13. Screen share cancellation produces an error.
+
+14. Refreshing meeting route breaks the room.
+
+15. Scheduled meetings can be created in the past.
+
+16. Duration accepts zero/negative numbers.
+
+17. Blank display names are accepted.
+
+
+=================================
+36. TESTING MATRIX
+=================================
+
+CREATE
+------
+
+[ ] Create instant meeting.
+[ ] Check DB row.
+[ ] Check unique meeting code.
+[ ] Check invite URL.
+[ ] Enter room.
+
+
+JOIN
+----
+
+[ ] Valid ID.
+[ ] Invalid ID.
+[ ] Valid link.
+[ ] Malformed link.
+[ ] Empty name.
+[ ] Very long name.
+[ ] Browser permission denied.
+
+
+SCHEDULE
+--------
+
+[ ] Future meeting.
+[ ] Invalid date.
+[ ] Past date.
+[ ] Zero duration.
+[ ] Dashboard refresh.
+[ ] Database persistence.
+
+
+MEETING ROOM
+------------
+
+[ ] One participant.
+[ ] Two participants.
+[ ] Multiple participants.
+[ ] Camera off.
+[ ] Mic off.
+[ ] Join.
+[ ] Leave.
+[ ] Rejoin.
+[ ] Screen share.
+[ ] Chat.
+
+
+HOST
+----
+
+[ ] Host can mute.
+[ ] Host can mute all.
+[ ] Host can remove.
+[ ] Participant cannot use host actions.
+
+
+RESPONSIVE
+----------
+
+[ ] Desktop.
+[ ] Tablet.
+[ ] Mobile.
+
+
+======================================
+37. RECOMMENDED VISUAL DESIGN SYSTEM
+======================================
+
+The assignment emphasizes Zoom-like look and feel.
+
+Use a restrained professional design.
+
+DASHBOARD
+---------
+
+- Light background.
+- White or near-white cards.
+- Rounded but not excessively rounded surfaces.
+- Strong heading hierarchy.
+- Small supporting text.
+- Consistent spacing scale.
+- Professional iconography.
+- Clear primary action.
+- Subtle shadows/borders.
+- Calendar/date information easy to scan.
+
+
+MEETING ROOM
+------------
+
+- Dark background.
+- High-contrast controls.
+- Video tiles with rounded corners.
+- Name overlays.
+- Fixed bottom toolbar.
+- Side drawers for chat/participants.
+- Clear leave/end control.
+- Avoid excessive decorative elements.
+
+
+DESIGN SYSTEM RULES
+-------------------
+
+Define:
+- typography scale.
+- spacing scale.
+- radii.
+- button variants.
+- card variants.
+- icon size.
+- panel width.
+- breakpoint behavior.
+
+Avoid styling each screen independently.
+
+
+====================================
+38. LIVEKIT MENTAL MODEL FOR INTERVIEW
+====================================
+
+You should understand the difference between:
+
+Application layer:
+- meeting record.
+- host.
+- participants.
+- schedule.
+- business rules.
+
+Media/realtime layer:
+- audio.
+- video.
+- track publication.
+- subscription.
+- room connectivity.
+
+The database does NOT carry video streams.
+
+SQLite stores application metadata.
+LiveKit handles realtime media.
+
+
+===================================
+39. WEBRTC INTERVIEW PREPARATION
+===================================
+
+Question: What is WebRTC?
+
+Answer:
+WebRTC is a browser technology for realtime peer/media communication,
+including audio and video.
+
+
+Question: Why is signaling needed?
+
+Answer:
+WebRTC needs a way for communicating parties to exchange session
+negotiation information before the media connection can be established.
+Signaling can be transported using WebSockets or another application
+channel.
+
+
+Question: What is SDP?
+
+Answer:
+Session Description Protocol. It describes the proposed media/session
+configuration during negotiation.
+
+
+Question: What is ICE?
+
+Answer:
+Interactive Connectivity Establishment. It helps discover candidate network
+paths and determine how endpoints can connect.
+
+
+Question: What is STUN?
+
+Answer:
+A mechanism used to discover public-facing network information for
+NAT traversal.
+
+
+Question: What is TURN?
+
+Answer:
+A relay mechanism used when a direct peer-to-peer path cannot be established.
+
+
+Question: What is an SFU?
+
+Answer:
+Selective Forwarding Unit. Participants send media to the SFU, and the SFU
+forwards media to the appropriate subscribers.
+
+
+Question: Why SFU instead of P2P mesh?
+
+Answer:
+P2P mesh becomes increasingly expensive as participant count increases
+because each participant may need to upload multiple streams. An SFU lets
+each participant publish upstream while the server forwards tracks to
+subscribers.
+
+
+====================================
+40. FASTAPI INTERVIEW PREPARATION
+====================================
+
+Why FastAPI?
+
+Answer:
+- Clean REST API design.
+- Pydantic validation.
+- Async support.
+- Automatic API documentation.
+- Native WebSocket support.
+- Good fit for a realtime-oriented application.
+
+Why not put all logic in routes?
+
+Answer:
+Routes should handle HTTP concerns. Business logic belongs in services, and
+database operations belong in repositories or dedicated data-access functions.
+
+
+======================================
+41. NEXT.JS / FRONTEND INTERVIEW PREP
+======================================
+
+Why Next.js?
+
+Answer:
+The assignment requires Next.js. It also provides routing and a React-based
+component architecture appropriate for a client-heavy SPA-style application.
+
+Why reusable components?
+
+Answer:
+Repeated UI patterns such as MeetingCard, VideoTile, and MeetingControls
+should be maintained in one place so the interface stays consistent and
+changes do not require duplicate edits.
+
+
+=========================================
+42. DATABASE INTERVIEW PREPARATION
+=========================================
+
+Question:
+Why separate meetings and participants?
+
+Answer:
+One meeting has many participants, and users/guests can participate in many
+meetings. The participant table represents this relationship and stores
+session-specific data.
+
+
+Question:
+Why is user_id nullable?
+
+Answer:
+Authentication is optional. Guests can join by entering a display name.
+
+
+Question:
+Why not use MongoDB?
+
+Answer:
+SQLite is explicitly required by the assignment, and the data has clear
+relational relationships.
+
+
+Question:
+Why not use the DB integer ID as meeting ID?
+
+Answer:
+The internal database ID is an implementation detail. A separate public
+meeting code is safer and more appropriate for the user-facing meeting URL.
+
+
+================================
+43. API INTERVIEW PREPARATION
+================================
+
+Why REST for meetings?
+
+Because:
+- create meeting.
+- schedule meeting.
+- retrieve meeting.
+- validate meeting.
+- retrieve upcoming/recent meetings.
+
+These are request/response business operations.
+
+Why realtime for meeting state?
+
+Because:
+- participant joined.
+- participant left.
+- mute event.
+- chat message.
+- screen share state.
+
+These are event-driven and time-sensitive.
+
+
+=================================
+44. SECURITY INTERVIEW PREP
+=================================
+
+Core concepts to explain:
+
+1. Meeting ID is identification, not authorization.
+
+2. Host role should be determined server-side/application-side.
+
+3. Do not trust frontend role claims.
+
+4. Validate display names and request payloads.
+
+5. Validate meeting existence before joining.
+
+6. Keep credentials and LiveKit secrets in environment variables.
+
+7. Do not expose secret keys to the browser.
+
+8. Production deployment must use secure HTTPS/WSS connections.
+
+9. CORS should allow only expected frontend origins where practical.
+
+
+=================================
+45. BONUS FEATURE PRIORITY
+=================================
+
+HIGH VALUE / LOW RISK
+---------------------
+
+1. Responsive UI
+2. Host mute
+3. Mute all
+4. Remove participant
+5. Chat
+6. Screen share
+
+
+MEDIUM VALUE / MEDIUM RISK
+--------------------------
+
+7. Minimal authentication
+
+
+LOW VALUE / HIGH RISK
+---------------------
+
+8. Recording
+9. Calendar integration
+10. Advanced permissions
+11. Complex meeting settings
+
+
+RULE:
+Never sacrifice a mandatory feature to add a bonus feature.
+
+
+================================
+46. README STRUCTURE
+================================
+
+# Zoom Clone
+
+## 1. Overview
+
+## 2. Features
+
+## 3. Architecture
+
+## 4. Tech Stack
+
+## 5. Project Structure
+
+## 6. Database Schema
+
+## 7. API Endpoints
+
+## 8. Environment Variables
+
+## 9. Local Setup
+
+## 10. Running Frontend
+
+## 11. Running Backend
+
+## 12. LiveKit Configuration
+
+## 13. Deployment
+
+## 14. Screenshots
+
+## 15. Assumptions
+
+## 16. Limitations
+
+## 17. Future Improvements
+
+
+ASSUMPTIONS TO STATE
+--------------------
+
+- Authentication is omitted because the assignment allows a default user.
+- SQLite is used as specified.
+- LiveKit is used for realtime media transport.
+- Guest users can join using display names.
+- Chat may be realtime-only in the prototype.
+- Some production-grade Zoom features are intentionally out of scope.
+
+
+========================================
+47. ENVIRONMENT VARIABLE CHECKLIST
+========================================
+
+Frontend example:
+NEXT_PUBLIC_API_URL=
+NEXT_PUBLIC_LIVEKIT_URL=
+
+Backend example:
+DATABASE_URL=
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+FRONTEND_ORIGIN=
+
+
+SECURITY:
+- Do not commit .env.
+- Commit .env.example.
+- Never expose LIVEKIT_API_SECRET in frontend code.
+
+
+==================================
+48. GIT / GITHUB STRATEGY
+==================================
+
+Recommended commits:
+
+1. chore: initialize frontend and backend
+2. feat: add database models and seed data
+3. feat: implement meeting APIs
+4. feat: implement dashboard
+5. feat: implement join and schedule workflows
+6. feat: add realtime meeting room
+7. feat: add host controls
+8. feat: add responsive design
+9. docs: add README
+10. fix: production deployment issues
+
+
+Keep commits small enough to understand.
+
+
+======================================
+49. DEPLOYMENT ORDER
+======================================
+
+1. Deploy backend.
+2. Configure production environment variables.
+3. Confirm API health endpoint.
+4. Confirm SQLite initialization/seed behavior.
+5. Configure LiveKit.
+6. Deploy frontend.
+7. Point frontend to backend production URL.
+8. Configure CORS.
+9. Verify HTTPS.
+10. Run two-browser meeting test on production.
+
+
+====================================
+50. TWO-BROWSER FINAL DEMO SCRIPT
+====================================
+
+BROWSER A
+---------
+
+1. Open dashboard.
+2. Click New Meeting.
+3. Enter meeting room.
+4. Copy invite link.
+
+
+BROWSER B
+---------
+
+5. Open copied invite link.
+6. Enter display name.
+7. Pre-join.
+8. Join room.
+
+
+DEMO
+----
+
+9. Show A seeing B.
+10. Show B seeing A.
+11. Toggle microphone.
+12. Toggle camera.
+13. Open participants panel.
+14. Open chat.
+15. Send message.
+16. Share screen.
+17. Host mutes participant.
+18. Host removes participant.
+19. Leave/end meeting.
+
+
+SCHEDULE DEMO
+-------------
+
+20. Return to dashboard.
+21. Schedule meeting.
+22. Show it in Upcoming.
+23. Refresh page.
+24. Show it persists.
+25. Start/join scheduled meeting.
+
+
+JOIN BY ID DEMO
+---------------
+
+26. Use Join Meeting.
+27. Enter raw meeting code.
+28. Validate.
+29. Join.
+
+
+INVALID FLOW
+------------
+
+30. Enter nonexistent meeting code.
+31. Show clean "Meeting not found" message.
+
+
+====================================
+51. EVALUATION CRITERIA MAPPING
+====================================
+
+FUNCTIONALITY
+-------------
+
+Demonstrate:
+- Create.
+- Join.
+- Schedule.
+- Persist.
+- Realtime meeting.
+- Host controls.
+
+
+UI / UX
+-------
+
+Demonstrate:
+- Zoom-inspired dashboard.
+- Dark meeting room.
+- Consistent controls.
+- Responsive layouts.
+- Polished states and transitions.
+
+
+DATABASE DESIGN
+---------------
+
+Demonstrate:
+- normalized relationships.
+- foreign keys.
+- unique meeting code.
+- lifecycle fields.
+- participant session history.
+
+
+CODE QUALITY
+------------
+
+Demonstrate:
+- TypeScript types.
+- Pydantic schemas.
+- services.
+- repositories.
+- reusable React components.
+- error handling.
+
+
+CODE MODULARITY
+---------------
+
+Demonstrate:
+- no giant page.
+- separate dashboard components.
+- separate meeting components.
+- hooks for reusable behavior.
+- backend separation of router/service/data access.
+
+
+CODE UNDERSTANDING
+------------------
+
+Be able to explain:
+- why LiveKit.
+- why REST + realtime separation.
+- why SQLite.
+- meeting lifecycle.
+- database relationships.
+- WebRTC basics.
+- host authorization.
+- timezone strategy.
+- deployment architecture.
+
+
+=====================================
+52. FINAL "DO NOT OVERENGINEER" RULES
+=====================================
+
+Rule 1:
+Do not build production-scale authentication unless the core is complete.
+
+Rule 2:
+Do not implement a custom SFU.
+
+Rule 3:
+Do not add Kafka, Redis, Kubernetes, or microservices.
+
+Rule 4:
+Do not spend hours building a sophisticated design system before the
+meeting workflow works.
+
+Rule 5:
+Do not add a feature just because Zoom has it.
+
+Rule 6:
+Do not sacrifice stability for quantity of features.
+
+Rule 7:
+Do not copy an existing repository.
+
+Rule 8:
+Every line submitted should be understandable enough to explain in the
+interview.
+
+
+=====================================
+53. FINAL BUILD ORDER — MASTER FLOW
+=====================================
+
+DATABASE
+   |
+   v
+FASTAPI CRUD
+   |
+   v
+DASHBOARD
+   |
+   v
+CREATE / JOIN / SCHEDULE
+   |
+   v
+MEETING ROUTE
+   |
+   v
+LIVEKIT CONNECTION
+   |
+   v
+MIC / CAMERA
+   |
+   v
+PARTICIPANTS
+   |
+   v
+CHAT / SCREEN SHARE
+   |
+   v
+HOST CONTROLS
+   |
+   v
+RESPONSIVE UI
+   |
+   v
+VISUAL POLISH
+   |
+   v
+DEPLOYMENT
+   |
+   v
+END-TO-END TESTING
+   |
+   v
+README
+   |
+   v
+INTERVIEW PREPARATION
+
+
+========================================
+54. FINAL DEFINITION OF "DONE"
+========================================
+
+The project is considered ready for submission when:
+
+[ ] All P0 requirements work.
+[ ] Responsive design works.
+[ ] Host controls work.
+[ ] Two browsers can join one room.
+[ ] Camera and microphone work.
+[ ] Screen sharing works.
+[ ] Chat works.
+[ ] Database persists meetings.
+[ ] Meeting IDs are unique.
+[ ] Invite links work.
+[ ] Invalid meetings are handled.
+[ ] Scheduled meetings persist after refresh.
+[ ] Production deployment works.
+[ ] README is complete.
+[ ] GitHub repository is public.
+[ ] No secrets are committed.
+[ ] No obvious console errors remain.
+[ ] No major mobile layout breaks remain.
+[ ] Every major architectural choice can be explained.
+
+
+========================================
+55. FINAL SENIOR-DEVELOPER MINDSET
+========================================
+
+The evaluator is not looking for the largest number of features.
+
+The strongest one-day submission is:
+
+- Small enough to finish.
+- Clean enough to inspect.
+- Polished enough to impress.
+- Real enough to demonstrate realtime functionality.
+- Structured enough to show engineering maturity.
+- Simple enough that the candidate can explain every major decision.
+
+TARGET:
+
+"Feels like Zoom, but is clearly our own implementation."
+
+Do not optimize for maximum code.
+
+Optimize for:
+FUNCTIONALITY
++
+RELIABILITY
++
+UI/UX
++
+DATABASE QUALITY
++
+MODULARITY
++
+EXPLAINABILITY
+
+
+END OF IMPLEMENTATION PLAN
+==========================
