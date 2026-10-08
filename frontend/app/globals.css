@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0b5cff;
+  --color-primary-hover: #0043c9;
+  
+  /* Dashboard Theme */
+  --color-dashboard-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #de2828;
+
+  /* Meeting Room Theme */
+  --color-meeting-bg: #111111;
+  --color-meeting-toolbar: #1f1f1f;
+  --color-meeting-toolbar-hover: #242424;
+  --color-meeting-panel: #181818;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-dashboard-bg);
+    color: var(--color-text-primary);
+  }
+}
