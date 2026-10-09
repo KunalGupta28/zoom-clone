@@ -3,6 +3,8 @@ import os
 from fastapi import HTTPException
 from ..config import settings
 
+import json
+
 class LiveKitService:
     def __init__(self):
         self.api_key = settings.LIVEKIT_API_KEY
@@ -19,6 +21,7 @@ class LiveKitService:
         token = api.AccessToken(self.api_key, self.api_secret)
         token.with_identity(participant_name)
         token.with_name(participant_name)
+        token.with_metadata(json.dumps({"is_host": is_host}))
         
         grant = api.VideoGrants(
             room_join=True,

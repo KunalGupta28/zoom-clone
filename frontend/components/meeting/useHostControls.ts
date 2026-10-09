@@ -13,7 +13,13 @@ export function useHostControls() {
       const data = JSON.parse(str);
       
       if (data.action === "mute_all") {
-        const isLocalHost = localParticipant.permissions?.roomAdmin === true;
+        let isLocalHost = false;
+        try {
+           if (localParticipant.metadata) {
+              const meta = JSON.parse(localParticipant.metadata);
+              isLocalHost = meta.is_host === true;
+           }
+        } catch(e){}
         if (isLocalHost) return; // Host doesn't mute themselves
         localParticipant.setMicrophoneEnabled(false);
       }
@@ -41,7 +47,13 @@ export function useHostControls() {
     };
   }, [room, handleData]);
 
-  const isHost = localParticipant.permissions?.roomAdmin === true;
+  let isHost = false;
+  try {
+     if (localParticipant.metadata) {
+        const meta = JSON.parse(localParticipant.metadata);
+        isHost = meta.is_host === true;
+     }
+  } catch(e){}
 
   const sendCommand = (cmd: any) => {
     if (!isHost) return;

@@ -15,7 +15,13 @@ export default function ParticipantsPanel() {
 
   // Helper to determine host
   const isParticipantHost = (p: any) => {
-    return p?.permissions?.roomAdmin === true;
+    try {
+      if (p?.metadata) {
+        const meta = JSON.parse(p.metadata);
+        return meta.is_host === true;
+      }
+    } catch(e){}
+    return false;
   };
 
   // Put host first, then local, then others
