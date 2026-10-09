@@ -95,6 +95,8 @@ export function useHostControls(meetingCode?: string) {
         }
     }
     sendCommand({ action: "end_meeting" });
+    room.disconnect();
+    window.location.href = "/";
   };
 
   return {

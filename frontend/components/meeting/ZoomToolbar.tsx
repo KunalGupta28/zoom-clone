@@ -3,20 +3,35 @@
 import { useAppStore } from "@/stores/app-store";
 import { 
   TrackToggle, 
-  DisconnectButton, 
+  DisconnectButton,
+  useChat
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, Users, MessageSquare, MonitorUp, MoreHorizontal, PhoneOff } from "lucide-react";
 import { useParticipants } from "@livekit/components-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useHostControls } from "./useHostControls";
 
 export default function ZoomToolbar({ meetingCode }: { meetingCode?: string }) {
-  const { activePanel, setActivePanel } = useAppStore();
+  const { activePanel, setActivePanel, unreadChatCount, setUnreadChatCount } = useAppStore();
   const participants = useParticipants();
+  const { chatMessages } = useChat();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [showLeaveMenu, setShowLeaveMenu] = useState(false);
   const { isHost, endMeeting } = useHostControls(meetingCode);
+  const prevChatCount = useRef(chatMessages.length);
+
+  useEffect(() => {
+    if (activePanel === "chat") {
+      setUnreadChatCount(0);
+      prevChatCount.current = chatMessages.length;
+    } else {
+      if (chatMessages.length > prevChatCount.current) {
+        setUnreadChatCount(unreadChatCount + (chatMessages.length - prevChatCount.current));
+        prevChatCount.current = chatMessages.length;
+      }
+    }
+  }, [chatMessages.length, activePanel, unreadChatCount, setUnreadChatCount]);
 
   return (
     <div className="h-20 bg-[#1A1A1A] border-t border-black flex items-center justify-between px-4 z-10 font-sans">
@@ -65,7 +80,14 @@ export default function ZoomToolbar({ meetingCode }: { meetingCode?: string }) {
           onClick={() => setActivePanel(activePanel === "chat" ? "none" : "chat")}
           className={`flex flex-col items-center justify-center w-10 sm:w-16 h-10 sm:h-12 rounded-lg hover:bg-gray-800 transition-colors ${activePanel === "chat" ? "text-green-500" : "text-gray-300"}`}
         >
-           <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 mb-1" />
+           <div className="relative">
+             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 mb-1" />
+             {unreadChatCount > 0 && activePanel !== "chat" && (
+               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full">
+                 {unreadChatCount > 9 ? "9+" : unreadChatCount}
+               </span>
+             )}
+           </div>
            <span className="text-[9px] sm:text-[10px] hidden sm:block">Chat</span>
         </button>
 
