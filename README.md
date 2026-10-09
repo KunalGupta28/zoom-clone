@@ -60,35 +60,11 @@ The platform is designed to allow users to instantly create, schedule, and join 
 
 ### Architecture Diagram
 
-```mermaid
-graph TD
-    Client[Web Browser Client] -->|HTTPS REST| Vercel[Next.js Frontend]
-    Vercel -->|HTTPS REST| Railway[FastAPI Backend]
-    
-    Railway <-->|SQLAlchemy| DB[(SQLite Database)]
-    Railway <-->|Server SDK| LiveKitCloud[LiveKit Server]
-    
-    Client <-->|WebRTC / WebSockets| LiveKitCloud
-```
+![Architecture Diagram](assets/architecture.png)
 
 ### Meeting Workflow Sequence
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant LiveKit
-
-    User->>Frontend: Clicks "Join Meeting"
-    Frontend->>Backend: POST /api/meetings/{id}/token (with JWT Auth if logged in)
-    Backend->>Backend: Verify Meeting exists & Check if User is Host
-    Backend->>LiveKit: Generate Participant Token (room_admin=True if Host)
-    Backend-->>Frontend: Returns LiveKit Token & Server URL
-    Frontend->>LiveKit: Connect via WebSockets/WebRTC using Token
-    LiveKit-->>Frontend: Connection Established (Media Flow Starts)
-    Frontend-->>User: Displays Meeting Room
-```
+![Meeting Workflow Sequence](assets/workflow.png)
 
 ## 🔐 Assumptions, Permissions, and Product Decisions
 
