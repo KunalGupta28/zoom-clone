@@ -66,11 +66,11 @@ export default function MeetingRoom({ meeting }: { meeting: Meeting }) {
         
         {activePanel === "chat" && (
           <div className="absolute right-0 top-0 bottom-0 w-80 border-l border-gray-800/80 bg-[#1a1a1a] flex flex-col h-full shadow-2xl z-10 transform transition-transform duration-300">
-            <div className="p-4 border-b border-gray-800/80 flex justify-between items-center bg-[#1e1e1e]">
+            <div className="p-4 border-b border-gray-800/80 flex justify-between items-center bg-[#1e1e1e] shrink-0">
               <h2 className="font-semibold text-white tracking-wide">In-Meeting Chat</h2>
               <button onClick={() => setActivePanel("none")} className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">✕</button>
             </div>
-            <div className="flex-1 overflow-hidden h-full">
+            <div className="flex-1 overflow-hidden relative">
                <CustomChat />
             </div>
           </div>

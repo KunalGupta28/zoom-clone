@@ -1,13 +1,18 @@
 "use client";
 
 import { useChat, useLocalParticipant } from "@livekit/components-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 
 export default function CustomChat() {
   const { send, chatMessages } = useChat();
   const { localParticipant } = useLocalParticipant();
   const [message, setMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +52,7 @@ export default function CustomChat() {
             );
           })
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
