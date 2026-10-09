@@ -60,7 +60,7 @@ The platform is designed to allow users to instantly create, schedule, and join 
 
 ### Architecture Diagram
 
-![Architecture Diagram](assets/architecture.png)
+![Architecture Diagram](assets/architecture.jpg)
 
 ### Meeting Workflow Sequence
 
