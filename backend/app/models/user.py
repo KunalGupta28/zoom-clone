@@ -11,3 +11,8 @@ class User(Base):
     hashed_password = Column(String, nullable=True) # Nullable for guest accounts
     avatar_url = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    # Auth fields
+    is_verified = Column(Integer, default=0) # SQLite boolean
+    verification_token = Column(String, nullable=True)
+    reset_token = Column(String, nullable=True)
