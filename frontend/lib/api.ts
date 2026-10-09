@@ -98,7 +98,10 @@ export async function signup(data: any) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Signup failed");
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Signup failed");
+    }
     return res.json();
 }
 
