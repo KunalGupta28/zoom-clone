@@ -85,3 +85,9 @@ class MeetingService:
         if description is not None:
             meeting.description = description
         return self.meeting_repo.update(meeting)
+
+    def end_meeting(self, meeting_code: str) -> Meeting:
+        meeting = self.get_meeting(meeting_code)
+        meeting.status = "ended"
+        meeting.ended_at = datetime.now(timezone.utc)
+        return self.meeting_repo.update(meeting)

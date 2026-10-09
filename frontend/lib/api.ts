@@ -80,6 +80,15 @@ export async function updateMeeting(meetingCode: string, data: { title?: string,
     return res.json();
 }
 
+export async function endMeetingApi(meetingCode: string) {
+    const res = await fetch(`${API_BASE_URL}/meetings/${meetingCode}/end`, {
+        method: 'POST',
+        headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to end meeting");
+    return res.json();
+}
+
 // --- Auth Endpoints ---
 
 export async function login(data: any) {

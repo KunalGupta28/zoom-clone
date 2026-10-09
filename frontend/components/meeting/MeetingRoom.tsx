@@ -22,7 +22,7 @@ export default function MeetingRoom({ meeting }: { meeting: Meeting }) {
   const participants = useParticipants();
   
   // Mount the host controls listener
-  useHostControls();
+  useHostControls(meeting.meeting_code);
 
   const tracks = useTracks(
     [
@@ -78,7 +78,7 @@ export default function MeetingRoom({ meeting }: { meeting: Meeting }) {
       </div>
 
       {/* Bottom Toolbar */}
-      <ZoomToolbar />
+      <ZoomToolbar meetingCode={meeting.meeting_code} />
       
       <RoomAudioRenderer />
     </div>

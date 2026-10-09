@@ -11,12 +11,12 @@ import { useParticipants } from "@livekit/components-react";
 import { useState } from "react";
 import { useHostControls } from "./useHostControls";
 
-export default function ZoomToolbar() {
+export default function ZoomToolbar({ meetingCode }: { meetingCode?: string }) {
   const { activePanel, setActivePanel } = useAppStore();
   const participants = useParticipants();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [showLeaveMenu, setShowLeaveMenu] = useState(false);
-  const { isHost, endMeeting } = useHostControls();
+  const { isHost, endMeeting } = useHostControls(meetingCode);
 
   return (
     <div className="h-20 bg-[#1A1A1A] border-t border-black flex items-center justify-between px-4 z-10 font-sans">

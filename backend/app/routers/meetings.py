@@ -71,6 +71,17 @@ def update_meeting(meeting_code: str, update_data: MeetingUpdate, db: Session = 
     service = MeetingService(db)
     return service.update_meeting(meeting_code, title=update_data.title, description=update_data.description)
 
+@router.post("/{meeting_code}/end", response_model=MeetingResponse)
+def end_meeting(meeting_code: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    service = MeetingService(db)
+    meeting = service.get_meeting(meeting_code)
+    
+    # Only host can end
+    if not current_user or current_user.id != meeting.host_user_id:
+        raise HTTPException(status_code=403, detail="Only the host can end the meeting")
+        
+    return service.end_meeting(meeting_code)
+
 @router.delete("/{meeting_code}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_meeting(meeting_code: str, db: Session = Depends(get_db)):
     service = MeetingService(db)

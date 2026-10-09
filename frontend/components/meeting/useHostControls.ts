@@ -3,7 +3,9 @@
 import { useEffect, useCallback } from "react";
 import { useRoomContext, useLocalParticipant } from "@livekit/components-react";
 
-export function useHostControls() {
+import { endMeetingApi } from "@/lib/api";
+
+export function useHostControls(meetingCode?: string) {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
 
@@ -84,7 +86,14 @@ export function useHostControls() {
     sendCommand({ action: "kick", identity });
   };
 
-  const endMeeting = () => {
+  const endMeeting = async () => {
+    if (meetingCode) {
+        try {
+            await endMeetingApi(meetingCode);
+        } catch (e) {
+            console.error("Failed to end meeting on backend", e);
+        }
+    }
     sendCommand({ action: "end_meeting" });
   };
 
