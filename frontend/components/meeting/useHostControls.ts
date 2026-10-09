@@ -13,8 +13,7 @@ export function useHostControls() {
       const data = JSON.parse(str);
       
       if (data.action === "mute_all") {
-        const lowerName = localParticipant.name?.toLowerCase() || "";
-        const isLocalHost = lowerName.includes("kunal") || lowerName.includes("browser") || lowerName.includes("host");
+        const isLocalHost = localParticipant.permissions?.roomAdmin === true;
         if (isLocalHost) return; // Host doesn't mute themselves
         localParticipant.setMicrophoneEnabled(false);
       }
@@ -42,8 +41,7 @@ export function useHostControls() {
     };
   }, [room, handleData]);
 
-  const lowerLocalName = localParticipant.name?.toLowerCase() || "";
-  const isHost = lowerLocalName.includes("kunal") || lowerLocalName.includes("browser") || lowerLocalName.includes("host");
+  const isHost = localParticipant.permissions?.roomAdmin === true;
 
   const sendCommand = (cmd: any) => {
     if (!isHost) return;

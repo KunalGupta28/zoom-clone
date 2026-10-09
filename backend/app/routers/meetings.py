@@ -37,16 +37,26 @@ def get_meeting(meeting_code: str, db: Session = Depends(get_db)):
     return service.get_meeting(meeting_code)
 
 @router.post("/{meeting_code}/token", response_model=TokenResponse)
-def generate_token(meeting_code: str, participant: ParticipantCreate, db: Session = Depends(get_db)):
+def generate_token(
+    meeting_code: str, 
+    participant: ParticipantCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     service = MeetingService(db)
     lk_service = LiveKitService()
     
     meeting = service.get_meeting(meeting_code)
     
-    # Mocking host authorization based on the name for this assignment
-    is_host = participant.display_name.lower() == "kunal" or "browser" in participant.display_name.lower()
+    # Check if the current logged-in user is the host of this meeting
+    is_host = False
+    user_id = None
+    if current_user:
+        user_id = current_user.id
+        if current_user.id == meeting.host_user_id:
+            is_host = True
     
-    service.join_meeting(meeting_code, participant, user_id=DEFAULT_USER_ID if is_host else None)
+    service.join_meeting(meeting_code, participant, user_id=user_id)
     
     token = lk_service.create_token(
         room_name=meeting_code,

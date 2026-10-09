@@ -14,16 +14,14 @@ export default function ParticipantsPanel() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Helper to determine host
-  const isParticipantHost = (name: string | undefined) => {
-    if (!name) return false;
-    const lower = name.toLowerCase();
-    return lower.includes("kunal") || lower.includes("browser") || lower.includes("host");
+  const isParticipantHost = (p: any) => {
+    return p?.permissions?.roomAdmin === true;
   };
 
   // Put host first, then local, then others
   const sortedParticipants = [...participants].sort((a, b) => {
-    if (isParticipantHost(a.name)) return -1;
-    if (isParticipantHost(b.name)) return 1;
+    if (isParticipantHost(a)) return -1;
+    if (isParticipantHost(b)) return 1;
     if (a.identity === localParticipant.identity) return -1;
     if (b.identity === localParticipant.identity) return 1;
     return 0;
@@ -39,7 +37,7 @@ export default function ParticipantsPanel() {
       <div className="flex-1 overflow-y-auto">
         {sortedParticipants.map((p) => {
           const isLocal = p.identity === localParticipant.identity;
-          const isRoomHost = isParticipantHost(p.name);
+          const isRoomHost = isParticipantHost(p);
           const isMicOn = p.isMicrophoneEnabled;
           
           return (

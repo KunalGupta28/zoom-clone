@@ -24,12 +24,12 @@ export default function ZoomToolbar() {
       </div>
 
       {/* Center Controls */}
-      <div className="flex items-center justify-center gap-2 md:gap-4 flex-1">
+      <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-4 flex-1">
         
         <div className="flex flex-col items-center gap-1 group">
           <TrackToggle 
              source={Track.Source.Microphone} 
-             className="w-12 h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 flex items-center justify-center text-gray-200 data-[state=false]:text-red-500 data-[state=false]:bg-gray-800 transition-colors" 
+             className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 flex items-center justify-center text-gray-200 data-[state=false]:text-red-500 data-[state=false]:bg-gray-800 transition-colors" 
           >
              {/* LiveKit TrackToggle handles its own SVG by default, but we can style the wrapper */}
           </TrackToggle>
@@ -38,47 +38,47 @@ export default function ZoomToolbar() {
         <div className="flex flex-col items-center gap-1 group">
           <TrackToggle 
              source={Track.Source.Camera} 
-             className="w-12 h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 flex items-center justify-center text-gray-200 data-[state=false]:text-red-500 data-[state=false]:bg-gray-800 transition-colors" 
+             className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 flex items-center justify-center text-gray-200 data-[state=false]:text-red-500 data-[state=false]:bg-gray-800 transition-colors" 
           >
           </TrackToggle>
         </div>
 
-        <div className="w-px h-8 bg-gray-700 mx-2"></div>
+        <div className="w-px h-8 bg-gray-700 mx-1 sm:mx-2 hidden xs:block"></div>
 
         <button 
           onClick={() => setActivePanel(activePanel === "participants" ? "none" : "participants")}
-          className={`flex flex-col items-center justify-center w-16 h-12 rounded-lg hover:bg-gray-800 transition-colors ${activePanel === "participants" ? "text-green-500" : "text-gray-300"}`}
+          className={`flex flex-col items-center justify-center w-12 sm:w-16 h-10 sm:h-12 rounded-lg hover:bg-gray-800 transition-colors ${activePanel === "participants" ? "text-green-500" : "text-gray-300"}`}
         >
            <div className="relative">
-             <Users className="w-5 h-5 mb-1" />
+             <Users className="w-4 h-4 sm:w-5 sm:h-5 mb-1" />
              <span className="absolute -top-1 -right-2 bg-gray-600 text-white text-[9px] font-bold px-1 rounded-full">
                {participants.length}
              </span>
            </div>
-           <span className="text-[10px]">Participants</span>
+           <span className="text-[9px] sm:text-[10px] hidden sm:block">Participants</span>
         </button>
 
         <button 
           onClick={() => setActivePanel(activePanel === "chat" ? "none" : "chat")}
-          className={`flex flex-col items-center justify-center w-16 h-12 rounded-lg hover:bg-gray-800 transition-colors ${activePanel === "chat" ? "text-green-500" : "text-gray-300"}`}
+          className={`flex flex-col items-center justify-center w-12 sm:w-16 h-10 sm:h-12 rounded-lg hover:bg-gray-800 transition-colors ${activePanel === "chat" ? "text-green-500" : "text-gray-300"}`}
         >
-           <MessageSquare className="w-5 h-5 mb-1" />
-           <span className="text-[10px]">Chat</span>
+           <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 mb-1" />
+           <span className="text-[9px] sm:text-[10px] hidden sm:block">Chat</span>
         </button>
 
         <TrackToggle 
              source={Track.Source.ScreenShare} 
-             className="flex flex-col items-center justify-center w-16 h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 text-gray-300 data-[state=true]:text-green-500 transition-colors" 
+             className="flex flex-col items-center justify-center w-12 sm:w-16 h-10 sm:h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 text-gray-300 data-[state=true]:text-green-500 transition-colors" 
              showIcon={false}
         >
-             <MonitorUp className="w-5 h-5 mb-1" />
-             <span className="text-[10px]">Share</span>
+             <MonitorUp className="w-4 h-4 sm:w-5 sm:h-5 mb-1" />
+             <span className="text-[9px] sm:text-[10px] hidden sm:block">Share</span>
         </TrackToggle>
 
       </div>
 
       {/* Right Controls */}
-      <div className="w-1/4 flex justify-end items-center gap-4 relative">
+      <div className="w-auto shrink-0 md:w-1/4 flex justify-end items-center gap-2 sm:gap-4 relative">
          <button 
            onClick={() => setIsMoreOpen(!isMoreOpen)}
            className={`flex flex-col items-center justify-center w-12 h-12 rounded-lg transition-colors ${isMoreOpen ? 'bg-gray-800 text-white' : 'hover:bg-gray-800 text-gray-300'}`}

@@ -9,7 +9,7 @@ import "@livekit/components-styles";
 import MeetingRoom from "./MeetingRoom";
 
 export default function MeetingClient({ meetingCode }: { meetingCode: string }) {
-  const { user } = useUserStore();
+  const { user, loading: userLoading } = useUserStore();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -53,7 +53,7 @@ export default function MeetingClient({ meetingCode }: { meetingCode: string }) 
     }
   };
 
-  if (loading) {
+  if (loading || userLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--color-meeting-bg)]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-zoom-primary)]"></div>
