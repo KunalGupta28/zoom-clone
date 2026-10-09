@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     LIVEKIT_API_SECRET: str = ""
     LIVEKIT_URL: str = ""
     FRONTEND_ORIGIN: str = "http://localhost:3000"
+    SMTP_EMAIL: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
 
     class Config:
         env_file = ".env"

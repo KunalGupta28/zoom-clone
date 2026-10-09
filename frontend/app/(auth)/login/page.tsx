@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, getMe } from "@/lib/api";
+import { login, getMe, forgotPassword } from "@/lib/api";
 import { useUserStore } from "@/stores/user-store";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
@@ -36,15 +36,24 @@ export default function LoginPage() {
     }
   };
 
-  const handleForgotPassword = (e: React.MouseEvent) => {
+  const handleForgotPassword = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!email) {
       setError("Please enter your email address first");
       return;
     }
-    setResetSent(true);
-    setError("");
-    setTimeout(() => setResetSent(false), 5000);
+    
+    setLoading(true);
+    try {
+      await forgotPassword(email);
+      setResetSent(true);
+      setError("");
+      setTimeout(() => setResetSent(false), 5000);
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,7 +122,7 @@ export default function LoginPage() {
             
             {resetSent && (
               <div className="text-green-600 text-sm font-medium text-center bg-green-50 py-2 rounded-lg border border-green-200">
-                A password reset link has been sent to your email (Mocked for assignment).
+                A password reset link has been sent to your email.
               </div>
             )}
 

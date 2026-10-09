@@ -110,3 +110,42 @@ export async function getMe() {
     if (!res.ok) throw new Error("Failed to fetch profile");
     return res.json();
 }
+
+export async function forgotPassword(email: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Request failed");
+    }
+    return res.json();
+}
+
+export async function resetPassword(token: string, new_password: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, new_password }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Request failed");
+    }
+    return res.json();
+}
+
+export async function verifyEmail(token: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Verification failed");
+    }
+    return res.json();
+}
