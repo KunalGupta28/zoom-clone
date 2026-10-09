@@ -13,19 +13,17 @@ Base.metadata.create_all(bind=engine)
 
 # Auto-migrate: Add missing auth columns to users table if they don't exist
 try:
-    with engine.begin() as conn:
-        try:
+    with engine.connect() as conn:
+        columns = [row[1] for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+        
+        if "is_verified" not in columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0"))
-        except Exception:
-            pass
-        try:
+        if "verification_token" not in columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN verification_token VARCHAR"))
-        except Exception:
-            pass
-        try:
+        if "reset_token" not in columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR"))
-        except Exception:
-            pass
+            
+        conn.commit()
 except Exception as e:
     print("Migration failed:", e)
 
