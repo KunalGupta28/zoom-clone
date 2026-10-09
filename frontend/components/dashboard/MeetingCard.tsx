@@ -67,37 +67,39 @@ export default function MeetingCard({ meeting, isRecent = false, onRefresh }: Me
 
   // For both Upcoming and Recent, we use a compact row layout as requested
   return (
-    <div className="group bg-white border border-transparent hover:border-gray-200 hover:shadow-sm rounded-lg p-3 flex items-start gap-4 transition-all border-b border-b-gray-100 last:border-b-transparent">
+    <div className="group bg-white border border-transparent hover:border-gray-200 hover:shadow-sm rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 transition-all border-b border-b-gray-100 last:border-b-transparent">
       
-      {/* Time Column */}
-      <div className="w-[80px] shrink-0 pt-1">
-        <span className="text-[13px] font-semibold text-gray-900">{formattedTime}</span>
-        {meeting.duration_minutes && (
-          <div className="text-[11px] text-gray-500 font-medium">{meeting.duration_minutes} min</div>
-        )}
-      </div>
-
-      {/* Title & Info Column */}
-      <div className="flex-1 flex flex-col pt-1">
-        <h3 className="font-semibold text-[15px] text-[#0B5CFF] group-hover:underline cursor-pointer inline-block w-fit" onClick={() => router.push(`/meeting/${meeting.meeting_code}`)}>
-          {meeting.title}
-        </h3>
-        
-        <div className="flex items-center gap-3 mt-1.5 text-[12px] text-gray-500 font-medium">
-          <span className="flex items-center gap-1">
-            Meeting ID: {meeting.meeting_code}
-          </span>
-          {meeting.description && (
-             <>
-               <span className="opacity-50">|</span>
-               <span className="truncate max-w-[200px]">{meeting.description}</span>
-             </>
+      <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
+        {/* Time Column */}
+        <div className="w-[70px] sm:w-[80px] shrink-0 pt-1">
+          <span className="text-[13px] font-semibold text-gray-900">{formattedTime}</span>
+          {meeting.duration_minutes && (
+            <div className="text-[11px] text-gray-500 font-medium">{meeting.duration_minutes} min</div>
           )}
+        </div>
+
+        {/* Title & Info Column */}
+        <div className="flex-1 flex flex-col pt-1 min-w-0">
+          <h3 className="font-semibold text-[15px] text-[#0B5CFF] group-hover:underline cursor-pointer truncate" onClick={() => router.push(`/meeting/${meeting.meeting_code}`)}>
+            {meeting.title}
+          </h3>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5 text-[12px] text-gray-500 font-medium">
+            <span className="flex items-center shrink-0">
+              Meeting ID: {meeting.meeting_code}
+            </span>
+            {meeting.description && (
+               <>
+                 <span className="opacity-50 hidden sm:inline">|</span>
+                 <span className="truncate w-full sm:max-w-[200px]">{meeting.description}</span>
+               </>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Actions Column (Visible on hover or if not recent) */}
-      <div className={`flex items-center gap-2 ${isRecent ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity pt-1 relative`}>
+      <div className={`flex items-center gap-2 ${isRecent ? 'sm:opacity-0 sm:group-hover:opacity-100' : ''} transition-opacity pt-2 sm:pt-1 ml-[82px] sm:ml-0`}>
         <button 
           onClick={() => router.push(`/meeting/${meeting.meeting_code}`)}
           className="bg-[#0B5CFF] hover:bg-[#0043C9] text-white text-xs font-semibold py-1.5 px-4 rounded-full transition-colors cursor-pointer"
@@ -112,7 +114,7 @@ export default function MeetingCard({ meeting, isRecent = false, onRefresh }: Me
         >
           <Copy className="w-4 h-4" />
           {copied && (
-            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">
+            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-10">
               Copied!
             </span>
           )}
