@@ -55,12 +55,6 @@ def generate_token(
         user_id = current_user.id
         if current_user.id == meeting.host_user_id:
             is_host = True
-    elif meeting.host_user_id == DEFAULT_USER_ID:
-        # For testing: if the meeting is anonymous, grant host to the browser/PC testing it
-        if "kunal" in participant.display_name.lower() or "host" in participant.display_name.lower() or "pc" in participant.display_name.lower():
-             is_host = True
-        else:
-             is_host = True # Actually just grant it to everyone if it's an anonymous meeting so they can test controls
     
     service.join_meeting(meeting_code, participant, user_id=user_id)
     

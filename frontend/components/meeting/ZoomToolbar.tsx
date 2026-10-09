@@ -68,7 +68,7 @@ export default function ZoomToolbar() {
 
         <TrackToggle 
              source={Track.Source.ScreenShare} 
-             className="flex flex-col items-center justify-center w-10 sm:w-16 h-10 sm:h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 text-gray-300 data-[state=true]:text-green-500 transition-colors" 
+             className="hidden sm:flex flex-col items-center justify-center w-10 sm:w-16 h-10 sm:h-12 rounded-lg bg-transparent hover:bg-gray-800 border-0 text-gray-300 data-[state=true]:text-green-500 transition-colors" 
              showIcon={false}
         >
              <MonitorUp className="w-4 h-4 sm:w-5 sm:h-5 mb-1" />

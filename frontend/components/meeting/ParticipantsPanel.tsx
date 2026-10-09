@@ -70,9 +70,9 @@ export default function ParticipantsPanel() {
                 {isHost && !isLocal && (
                   <button 
                     onClick={() => setOpenMenuId(openMenuId === p.identity ? null : p.identity)}
-                    className="p-1 rounded hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1 rounded hover:bg-gray-700 transition-colors"
                   >
-                    <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                    <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-white" />
                   </button>
                 )}
               </div>
