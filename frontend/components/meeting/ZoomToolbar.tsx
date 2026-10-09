@@ -9,11 +9,14 @@ import { Track } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, Users, MessageSquare, MonitorUp, MoreHorizontal, PhoneOff } from "lucide-react";
 import { useParticipants } from "@livekit/components-react";
 import { useState } from "react";
+import { useHostControls } from "./useHostControls";
 
 export default function ZoomToolbar() {
   const { activePanel, setActivePanel } = useAppStore();
   const participants = useParticipants();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [showLeaveMenu, setShowLeaveMenu] = useState(false);
+  const { isHost, endMeeting } = useHostControls();
 
   return (
     <div className="h-20 bg-[#1A1A1A] border-t border-black flex items-center justify-between px-4 z-10 font-sans">
@@ -120,10 +123,38 @@ export default function ZoomToolbar() {
              </button>
            </div>
          )}
-         
-         <DisconnectButton className="bg-[#DE2828] hover:bg-[#C72222] text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors border-0">
-            Leave
-         </DisconnectButton>
+         {/* Leave / End Meeting Button */}
+         {isHost ? (
+           <div className="relative">
+             <button 
+               onClick={() => setShowLeaveMenu(!showLeaveMenu)}
+               className="bg-[#DE2828] hover:bg-[#C72222] text-white font-semibold text-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors border-0"
+             >
+                End
+             </button>
+             {showLeaveMenu && (
+               <div className="absolute bottom-12 right-0 w-48 bg-[#1e1e1e] border border-gray-700/50 rounded-xl shadow-2xl py-2 z-50 text-sm font-medium">
+                 <button 
+                   className="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-900/20 transition-colors"
+                   onClick={() => {
+                     endMeeting();
+                     setShowLeaveMenu(false);
+                   }}
+                 >
+                   End Meeting for All
+                 </button>
+                 <div className="h-px bg-gray-700/50 my-1 mx-2"></div>
+                 <DisconnectButton className="w-full text-left px-4 py-2.5 text-gray-200 hover:bg-gray-800 hover:text-white transition-colors bg-transparent hover:bg-transparent border-0 font-medium">
+                   Leave Meeting
+                 </DisconnectButton>
+               </div>
+             )}
+           </div>
+         ) : (
+           <DisconnectButton className="bg-[#DE2828] hover:bg-[#C72222] text-white font-semibold text-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors border-0">
+              Leave
+           </DisconnectButton>
+         )}
       </div>
 
     </div>

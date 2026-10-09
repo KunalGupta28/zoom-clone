@@ -8,6 +8,7 @@ import { createMeeting } from "@/lib/api";
 import { Meeting } from "@/types/meeting";
 import { fetchUpcomingMeetings, fetchRecentMeetings } from "@/lib/api";
 import MeetingCard from "./MeetingCard";
+import { useUserStore } from "@/stores/user-store";
 
 export default function DashboardClient() {
   const router = useRouter();
@@ -112,7 +113,14 @@ export default function DashboardClient() {
 
           <div className="flex flex-col items-center gap-3">
             <button 
-              onClick={() => router.push("/schedule")}
+              onClick={() => {
+                if (!useUserStore.getState().user) {
+                  alert("Please log in first to schedule a meeting.");
+                  router.push("/auth?mode=login");
+                } else {
+                  router.push("/schedule");
+                }
+              }}
               className="w-[72px] h-[72px] rounded-3xl bg-[#0B5CFF] hover:bg-[#0043C9] flex items-center justify-center text-white shadow-sm transition-colors cursor-pointer group"
             >
               <Calendar className="w-7 h-7 group-hover:scale-105 transition-transform" strokeWidth={1.5} />

@@ -35,6 +35,11 @@ export function useHostControls() {
       if (data.action === "kick" && data.identity === localParticipant.identity) {
         room.disconnect();
       }
+
+      if (data.action === "end_meeting") {
+        room.disconnect();
+        window.location.href = "/";
+      }
     } catch (e) {
       console.error("Failed to parse host control message", e);
     }
@@ -79,11 +84,16 @@ export function useHostControls() {
     sendCommand({ action: "kick", identity });
   };
 
+  const endMeeting = () => {
+    sendCommand({ action: "end_meeting" });
+  };
+
   return {
     isHost,
     muteAll,
     muteParticipant,
     disableCamera,
-    kickParticipant
+    kickParticipant,
+    endMeeting
   };
 }
